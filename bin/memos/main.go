@@ -36,14 +36,13 @@ var (
 	data            string
 	driver          string
 	dsn             string
-	serveFrontend   bool
-	allowedOrigins  []string
+	public          bool
 	instanceProfile *profile.Profile
 
 	rootCmd = &cobra.Command{
 		Use:   "memos",
 		Short: `An open source, lightweight note-taking service. Easily capture and share your great thoughts.`,
-		Run: func(_cmd *cobra.Command, _args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			ctx, cancel := context.WithCancel(context.Background())
 			dbDriver, err := db.NewDBDriver(instanceProfile)
 			if err != nil {
@@ -111,8 +110,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&data, "data", "d", "", "data directory")
 	rootCmd.PersistentFlags().StringVarP(&driver, "driver", "", "", "database driver")
 	rootCmd.PersistentFlags().StringVarP(&dsn, "dsn", "", "", "database source name(aka. DSN)")
-	rootCmd.PersistentFlags().BoolVarP(&serveFrontend, "frontend", "", true, "serve frontend files")
-	rootCmd.PersistentFlags().StringArrayVarP(&allowedOrigins, "origins", "", []string{}, "CORS allowed domain origins")
+	rootCmd.PersistentFlags().BoolVarP(&public, "public", "", true, "")
 
 	err := viper.BindPFlag("mode", rootCmd.PersistentFlags().Lookup("mode"))
 	if err != nil {
@@ -138,11 +136,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	err = viper.BindPFlag("frontend", rootCmd.PersistentFlags().Lookup("frontend"))
-	if err != nil {
-		panic(err)
-	}
-	err = viper.BindPFlag("origins", rootCmd.PersistentFlags().Lookup("origins"))
+	err = viper.BindPFlag("public", rootCmd.PersistentFlags().Lookup("public"))
 	if err != nil {
 		panic(err)
 	}
@@ -151,8 +145,7 @@ func init() {
 	viper.SetDefault("driver", "sqlite")
 	viper.SetDefault("addr", "")
 	viper.SetDefault("port", 8081)
-	viper.SetDefault("frontend", true)
-	viper.SetDefault("origins", []string{})
+	viper.SetDefault("public", true)
 	viper.SetEnvPrefix("memos")
 }
 
@@ -174,9 +167,8 @@ addr: %s
 port: %d
 mode: %s
 driver: %s
-frontend: %t
 ---
-`, instanceProfile.Version, instanceProfile.Data, instanceProfile.DSN, instanceProfile.Addr, instanceProfile.Port, instanceProfile.Mode, instanceProfile.Driver, instanceProfile.Frontend)
+`, instanceProfile.Version, instanceProfile.Data, instanceProfile.DSN, instanceProfile.Addr, instanceProfile.Port, instanceProfile.Mode, instanceProfile.Driver)
 }
 
 func printGreetings() {
